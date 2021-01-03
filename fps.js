@@ -19,6 +19,8 @@
 
     let score = 0;
 
+    let flash;
+
     let prevTime = performance.now();
     const velocity = new THREE.Vector3();
     const direction = new THREE.Vector3();
@@ -29,7 +31,7 @@
     animate();
 
     function init() {
-
+        // ------------------------- Initiating objects
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
         camera.position.y = 10;
 
@@ -37,17 +39,35 @@
         scene.background = new THREE.Color( 0xffffff );
         scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
 
-        const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
+        const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.1 );
         light.position.set( 0.5, 1, 0.75 );
         scene.add( light );
-
+        // ------------------------- Menambah light untuk muzzle flash (ketika menembak)
+        flash = new THREE.PointLight(0xf5e153, 1, 100 );
+        flash.position.set(0.0, 0.0, -2.0);
+        flash.visible = false;
+        camera.add(flash);
+        // ------------------------- Menambah control first person
         controls = new PointerLockControls( camera, document.body );
-        console.log(controls.setSens(0.6));
+        console.log(controls.setSens(0.5));
+
+        scene.add( controls.getObject() );
+        // ------------------------- Me-load sprite crosshair
+        const map = new THREE.TextureLoader().load( './assets/crosshair.png' );
+        const material = new THREE.SpriteMaterial( { map: map, transparent: true } );
+
+        sprite = new THREE.Sprite( material );
+        sprite.scale.set(0.1, 0.1, 1);
+        sprite.position.z = -2.0;
+        sprite.renderOrder = 9999;
+        sprite.depthWrite = false;
+        scene.add( sprite );
+
 
         const blocker = document.getElementById( 'blocker' );
         const instructions = document.getElementById( 'instructions' );
-
-        
+        // ------------------------- Event handling
+        // ------------------------- Menu event handling
         instructions.addEventListener( 'click', function () {
             console.log("lock");
             controls.lock();
@@ -68,17 +88,7 @@
 
         } );
 
-        
-        scene.add( controls.getObject() );
-
-        const map = new THREE.TextureLoader().load( './assets/crosshair.png' );
-        const material = new THREE.SpriteMaterial( { map: map } );
-
-        sprite = new THREE.Sprite( material );
-        scene.add( sprite );
-        sprite.scale.set(0.1, 0.1, 1);
-
-
+        // ------------------------ movement event handling
         const onKeyDown = function ( event ) {
 
             switch ( event.keyCode ) {
@@ -104,14 +114,14 @@
                     break;
 
                 case 32: // space
-                    if ( canJump === true ) velocity.y += 350;
+                    if ( canJump === true ) velocity.y += 150;
                     canJump = false;
                     break;
 
             }
 
         };
-
+        
         const onKeyUp = function ( event ) {
 
             switch ( event.keyCode ) {
@@ -143,13 +153,34 @@
         document.addEventListener( 'keydown', onKeyDown, false );
         document.addEventListener( 'keyup', onKeyUp, false );
 
-        document.addEventListener( 'click', function (e) {
+        // ------------------------- shooting event handling
+        document.addEventListener( 'mousedown', function (e) {
             if(controls.isLocked){
                 shooting = true;
+                flash.visible = true;
+                setTimeout(setInvisible, 100, flash);
+                raycaster2.setFromCamera( new THREE.Vector2(), camera );
+                raycaster2.ray.origin.copy( controls.getObject().position );
+                const intersects = raycaster2.intersectObjects( scene.children );
+
+                for ( let i = 0; i < intersects.length; i ++ ) {
+                    if(intersects[i].object.id != sprite.id && (objects.includes(intersects[i].object))){
+                        //intersects[ i ].object.material.color.set( 0xff0000 );
+                        if(shooting){
+                            shooting = false;
+                            scene.remove(intersects[i].object);
+                            score++;
+                            console.log(score);
+                        }
+                    }
+                    //console.log(intersects[i]);
+                }
+
+                shooting = false;
             }
         }, false );
 
-
+        // Raycaster untuk colission dengan tanah
         raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
         raycaster2 = new THREE.Raycaster();
 
@@ -188,7 +219,7 @@
 
         floorGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsFloor, 3 ) );
 
-        const floorMaterial = new THREE.MeshBasicMaterial( { vertexColors: true } );
+        const floorMaterial = new THREE.MeshPhongMaterial( { vertexColors: true } );
 
         const floor = new THREE.Mesh( floorGeometry, floorMaterial );
         scene.add( floor );
@@ -211,7 +242,7 @@
 
         for ( let i = 0; i < 500; i ++ ) {
 
-            const boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, vertexColors: true } );
+            const boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, vertexColors: true, transparent: true} );
             boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
 
             const box = new THREE.Mesh( boxGeometry, boxMaterial );
@@ -229,6 +260,7 @@
         renderer = new THREE.WebGLRenderer( { antialias: true } );
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
+        renderer.sortObjects = true;
         document.body.appendChild( renderer.domElement );
 
         //
@@ -254,12 +286,10 @@
 
         if ( controls.isLocked === true ) {
 
+            // menambahkan sprite crosshair
             var dir = controls.getDirection( direction );
             var dirV = new THREE.Vector3(dir.x, dir.y, dir.z);
             dirV.multiplyScalar(2);
-            //console.log(dirV);
-            //console.log(camera.position);
-            
 
             raycaster.ray.origin.copy( controls.getObject().position );
             raycaster.ray.origin.y -= 10;
@@ -273,7 +303,7 @@
             velocity.x -= velocity.x * 10.0 * delta;
             velocity.z -= velocity.z * 10.0 * delta;
 
-            velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+            velocity.y -= 7 * 60.0 * delta; // 100.0 = mass
 
             direction.z = Number( moveForward ) - Number( moveBackward );
             direction.x = Number( moveRight ) - Number( moveLeft );
@@ -302,32 +332,20 @@
                 canJump = true;
 
             }
-            raycaster2.setFromCamera( new THREE.Vector2(), camera );
-            raycaster2.ray.origin.copy( controls.getObject().position );
-            const intersects = raycaster2.intersectObjects( scene.children );
 
-            for ( let i = 0; i < intersects.length; i ++ ) {
-                if(intersects[i].object.id != sprite.id && (objects.includes(intersects[i].object))){
-                    //intersects[ i ].object.material.color.set( 0xff0000 );
-                    if(shooting){
-                        shooting = false;
-                        scene.remove(intersects[i].object);
-                        score++;
-                        console.log(score);
-                    }
-                }
-                //console.log(intersects[i]);
-            }
             sprite.position.x = camera.position.x + dirV.x;
             sprite.position.y = camera.position.y + dirV.y;
             sprite.position.z = camera.position.z + dirV.z;
-
-            shooting = false;
-
+            // sprite.renderOrder = 9999;
         }
 
         prevTime = time;
 
         renderer.render( scene, camera );
 
+    }
+
+    function setInvisible( object ){
+        object.visible = false;
+        //console.log("turning off flash");
     }
