@@ -22,6 +22,10 @@
     let flash;
     let flashTimer;
 
+    let scoreCanvas;
+    let scoreCanvasContext;
+    let scoreHUD, scoreMat, scoreMesh;
+
     let gameState = 1;
     //0 bermain, 1 main menu, 2 pengaturan
     const tombolKembali = document.getElementById("kembali");
@@ -203,6 +207,31 @@
             }
         }, false );
 
+        // Penanganan skor menggunakan canvas
+        scoreCanvas = document.createElement('canvas');
+        scoreCanvas.width = scoreCanvas.height = 1024;
+        scoreCanvasContext = scoreCanvas.getContext('2d');
+        scoreCanvasContext.font = "Bold 40px Arial";
+        scoreCanvasContext.textAlign = "center";
+        scoreCanvasContext.textBaseline = "middle";
+        scoreCanvasContext.fillStyle = "rgba(20,20,20,0.95)";
+        scoreCanvasContext.fillText('Score : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
+
+        scoreHUD = new THREE.Texture(scoreCanvas);
+        scoreHUD.needsUpdate = true;
+        
+        scoreMat = new THREE.MeshBasicMaterial( {map: scoreHUD, side:THREE.DoubleSide } );
+        scoreMat.transparent = true;
+    
+        scoreMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(scoreCanvas.width, scoreCanvas.height),
+            scoreMat
+          );
+        scoreMesh.position.set(0,1.3,-2);
+        scoreMesh.scale.set(0.002, 0.002, 1);
+        camera.add( scoreMesh );
+        console.log(scoreMesh.position);
+
         // Raycaster untuk colission dengan tanah
         raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
         raycaster2 = new THREE.Raycaster();
@@ -308,6 +337,10 @@
         const time = performance.now();
 
         if ( controls.isLocked === true ) {
+
+            updateCanvas();
+            scoreHUD.needsUpdate = true;
+
             if(flash.intensity > 0){
                 flashTimer++;
             }
@@ -378,4 +411,13 @@
     function setInvisible( object ){
         object.visible = false;
         //console.log("turning off flash");
+    }
+
+    function updateCanvas(){
+        scoreCanvasContext.clearRect(0, 0, scoreCanvas.width, scoreCanvas.height);
+        scoreCanvasContext.font = "Bold 40px Arial";
+        scoreCanvasContext.fillStyle = "rgba(20,20,20,0.95)";
+        scoreCanvasContext.textAlign = "center";
+        scoreCanvasContext.textBaseline = "middle";
+        scoreCanvasContext.fillText('Score : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
     }
