@@ -11,6 +11,9 @@
     let targetCount = 6;
     let gridSpacing = 10;
 
+    let shootCount = 0, targetHit = 0;
+    var acc;
+
     let raycaster, raycaster2;
 
     let moveForward = false;
@@ -101,6 +104,7 @@
         // ------------------------- Menu event handling
         tombolBermain.addEventListener( 'click', function () {
             controls.lock();
+            resetGame();
         }, false );
 
         tombolKembali.addEventListener('click', function (){
@@ -215,6 +219,7 @@
         // ------------------------- shooting event handling
         document.addEventListener( 'mousedown', function (e) {
             if(controls.isLocked && e.button == 0){
+                shootCount++;
                 shooting = true;
                 flash.intensity = 1;
                 raycaster2.setFromCamera( new THREE.Vector2(), camera );
@@ -232,7 +237,8 @@
                             console.log(getGrid(intersects[i].object));
                             setTargetPos(intersects[i].object);
 
-                            score++;  
+                            score++;
+                            targetHit++;  
                         }
                     }
                 }
@@ -405,6 +411,10 @@
         scoreCanvasContext.textAlign = "center";
         scoreCanvasContext.textBaseline = "middle";
         scoreCanvasContext.fillText('Skor : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
+        if(shootCount == 0) acc = 1;
+        else acc = targetHit/shootCount;
+
+        scoreCanvasContext.fillText('Akurasi : ' + (acc * 100).toFixed(2) + "%", scoreCanvas.width/2, scoreCanvas.height/2 + 40);
     }
 
     function playGunSound(){
@@ -465,5 +475,18 @@
         gridX = (targetObj.position.x + (gridSpacing * 3/2)) / 10;
         gridY = (targetObj.position.y - 10) / 10;
         return gridY * 4 + gridX;
+    }
+
+    function resetGame(){
+        for(var i = 0; i < targets.length; i++){
+            setTargetPos(targets[i]);
+        }
+        targetHit = 0;
+        shootCount = 0;
+        score = 0;
+        camera.position.y = 10;
+        camera.position.x = 0;
+        camera.position.z = 0;
+        camera.lookAt(0, 10, 100);
     }
  
