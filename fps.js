@@ -256,8 +256,6 @@
         scoreMesh.position.set(0,1.3,-2);
         scoreMesh.scale.set(0.002, 0.002, 1);
         camera.add( scoreMesh );
-        console.log(scoreMesh.position);
-
         
         // Raycaster untuk colission dengan tanah
         raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
@@ -268,37 +266,7 @@
         let floorGeometry = new THREE.PlaneBufferGeometry( 2000, 2000, 100, 100 );
         floorGeometry.rotateX( - Math.PI / 2 );
 
-        // vertex displacement
-
-        let position = floorGeometry.attributes.position;
-
-        for ( let i = 0, l = position.count; i < l; i ++ ) {
-
-            vertex.fromBufferAttribute( position, i );
-
-            vertex.x += Math.random() * 20 - 10;
-            vertex.y += Math.random() * 2;
-            vertex.z += Math.random() * 20 - 10;
-
-            position.setXYZ( i, vertex.x, vertex.y, vertex.z );
-
-        }
-
-        floorGeometry = floorGeometry.toNonIndexed(); // ensure each face has unique vertices
-
-        position = floorGeometry.attributes.position;
-        const colorsFloor = [];
-
-        for ( let i = 0, l = position.count; i < l; i ++ ) {
-
-            color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-            colorsFloor.push( color.r, color.g, color.b );
-
-        }
-
-        floorGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsFloor, 3 ) );
-
-        const floorMaterial = new THREE.MeshPhongMaterial( { vertexColors: true } );
+        const floorMaterial = new THREE.MeshPhongMaterial( { color:0x202020 } );
 
         const floor = new THREE.Mesh( floorGeometry, floorMaterial );
         scene.add( floor );
@@ -307,6 +275,7 @@
 
         const boxGeometry = new THREE.BoxBufferGeometry( 5, 5, 5 ).toNonIndexed();
 
+        var position;
         position = boxGeometry.attributes.position;
         const colorsBox = [];
 
