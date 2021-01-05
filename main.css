@@ -7,7 +7,8 @@ html, body {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0,0,0,0.8);
+    display: flex;
 }
 
 #instructions {
@@ -41,11 +42,12 @@ html, body {
 
 #pengaturan {
     width: 100%;
-    height: 100%;
+    height: auto;
 
-    display: -webkit-box;
-    display: -moz-box;
-    display: box;
+    margin-top: auto;
+    margin-bottom: auto;
+
+    display: none;
 
     -webkit-box-orient: horizontal;
     -moz-box-orient: horizontal;
@@ -68,7 +70,7 @@ html, body {
 }
 
 .slidecontainer {
-    width: 30%;
+    width: 100%;
     display: inline;
   }
 
@@ -77,12 +79,28 @@ html, body {
     cursor:pointer;
 }
 
+#kembali:hover {
+    color: coral;
+}
+
 #tombolPengaturan {
     font-size:36px;
     cursor:pointer;
+}
+
+#tombolPengaturan:hover {
+    color: coral;
 }
 
 #play {
     font-size:36px;
     cursor:pointer;
 }
+
+#play:hover {
+    color: coral;
+}
+
+.slider {
+    width: 20%; /* Full-width */
+  }

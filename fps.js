@@ -83,7 +83,6 @@
         
         // ------------------------- Menambah control first person
         controls = new PointerLockControls( camera, document.body );
-        console.log(controls.setSens(0.5));
 
         scene.add( controls.getObject() );
 
@@ -214,8 +213,6 @@
             }     
         });
 
-        console.log(gunSounds);
-
         // ------------------------- shooting event handling
         document.addEventListener( 'mousedown', function (e) {
             if(controls.isLocked && e.button == 0){
@@ -232,11 +229,7 @@
                             shooting = false;
                             playHitSound();
                             //menggeser objek yang di tembak
-                            // scene.remove(intersects[i].object);
-                            // targets.splice(targets.indexOf(intersects[i].object), 1);
-                            console.log(getGrid(intersects[i].object));
                             setTargetPos(intersects[i].object);
-
                             score++;
                             targetHit++;  
                         }
@@ -401,7 +394,6 @@
 
     function setInvisible( object ){
         object.visible = false;
-        //console.log("turning off flash");
     }
 
     function updateCanvas(){
@@ -443,13 +435,13 @@
             pengaturan.style.display = 'none';
         }else if( state == 1 ){
             gameState = 1;
-            blocker.style.display = 'block';
+            blocker.style.display = '';
             pengaturan.style.display = 'none';
             instructions.style.display = '';
         }else if(state == 2){
             gameState = 2;
-            blocker.style.display = 'block';
-            pengaturan.style.display = '';
+            blocker.style.display = '';
+            pengaturan.style.display = 'block';
             instructions.style.display = 'none';
         }
     }
