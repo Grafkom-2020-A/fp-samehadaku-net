@@ -34,6 +34,10 @@
 
     const sensSlider = document.getElementById("myRange");
 
+    const audioListener = new THREE.AudioListener();
+    const gunSound = new THREE.Audio( audioListener );
+    const audioLoader = new THREE.AudioLoader();
+
     let prevTime = performance.now();
     const velocity = new THREE.Vector3();
     const direction = new THREE.Vector3();
@@ -45,6 +49,8 @@
 
     function init() {
         // ------------------------- Initiating objects
+
+
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
         camera.position.y = 10;
 
@@ -82,6 +88,8 @@
         const blocker = document.getElementById( 'blocker' );
         const instructions = document.getElementById( 'instructions' );
         const pengaturan = document.getElementById('pengaturan');
+
+        pengaturan.style.display = 'none';
 
         // ------------------------- Event handling
         // ------------------------- Menu event handling
@@ -183,6 +191,13 @@
         document.addEventListener( 'keydown', onKeyDown, false );
         document.addEventListener( 'keyup', onKeyUp, false );
 
+        // Handling audio
+        camera.add( audioListener );
+        audioLoader.load( 'gunsound.wav', function( buffer ) {
+            gunSound.setBuffer( buffer );
+            gunSound.setVolume(0.2);
+        });
+
         // ------------------------- shooting event handling
         document.addEventListener( 'mousedown', function (e) {
             if(controls.isLocked){
@@ -196,6 +211,7 @@
                     if(intersects[i].object.id != sprite.id && (objects.includes(intersects[i].object))){
                         if(shooting){
                             shooting = false;
+                            
                             //menghapus objek yang di tembak
                             scene.remove(intersects[i].object);
                             objects.splice(objects.indexOf(intersects[i].object), 1);
@@ -203,6 +219,7 @@
                         }
                     }
                 }
+                gunSound.play();
                 shooting = false;
             }
         }, false );
@@ -232,6 +249,7 @@
         camera.add( scoreMesh );
         console.log(scoreMesh.position);
 
+        
         // Raycaster untuk colission dengan tanah
         raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
         raycaster2 = new THREE.Raycaster();
