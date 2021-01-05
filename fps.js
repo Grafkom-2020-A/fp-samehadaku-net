@@ -35,7 +35,7 @@
     const sensSlider = document.getElementById("myRange");
 
     const audioListener = new THREE.AudioListener();
-    const gunSound = new THREE.Audio( audioListener );
+    const gunSounds = [];
     const audioLoader = new THREE.AudioLoader();
 
     let prevTime = performance.now();
@@ -49,8 +49,6 @@
 
     function init() {
         // ------------------------- Initiating objects
-
-
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
         camera.position.y = 10;
 
@@ -192,15 +190,24 @@
         document.addEventListener( 'keyup', onKeyUp, false );
 
         // Handling audio
+        for(var i = 0; i < 3; i++){
+            var gunSound = new THREE.Audio( audioListener );
+            gunSounds.push(gunSound);
+        }
+        
         camera.add( audioListener );
         audioLoader.load( 'gunsound.wav', function( buffer ) {
-            gunSound.setBuffer( buffer );
-            gunSound.setVolume(0.2);
+            for(var i = 0; i < gunSounds.length; i++){
+                gunSounds[i].setBuffer( buffer );
+                gunSounds[i].setVolume(0.2);
+            }     
         });
+
+        console.log(gunSounds);
 
         // ------------------------- shooting event handling
         document.addEventListener( 'mousedown', function (e) {
-            if(controls.isLocked){
+            if(controls.isLocked && e.button == 0){
                 shooting = true;
                 flash.intensity = 1;
                 raycaster2.setFromCamera( new THREE.Vector2(), camera );
@@ -219,7 +226,7 @@
                         }
                     }
                 }
-                gunSound.play();
+                playGunSound();
                 shooting = false;
             }
         }, false );
@@ -232,7 +239,7 @@
         scoreCanvasContext.textAlign = "center";
         scoreCanvasContext.textBaseline = "middle";
         scoreCanvasContext.fillStyle = "rgba(20,20,20,0.95)";
-        scoreCanvasContext.fillText('Score : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
+        scoreCanvasContext.fillText('Skor : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
 
         scoreHUD = new THREE.Texture(scoreCanvas);
         scoreHUD.needsUpdate = true;
@@ -437,5 +444,16 @@
         scoreCanvasContext.fillStyle = "rgba(20,20,20,0.95)";
         scoreCanvasContext.textAlign = "center";
         scoreCanvasContext.textBaseline = "middle";
-        scoreCanvasContext.fillText('Score : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
+        scoreCanvasContext.fillText('Skor : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
     }
+
+    function playGunSound(){
+        for(var i = 0; i < gunSounds.length; i++){
+            if(!gunSounds[i].isPlaying){
+                console.log("playing" + i);
+                gunSounds[i].play();
+                break;
+            }
+        }
+    }
+ 
