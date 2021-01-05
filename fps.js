@@ -20,6 +20,15 @@
     let score = 0;
 
     let flash;
+    let flashTimer;
+
+    let gameState = 1;
+    //0 bermain, 1 main menu, 2 pengaturan
+    const tombolKembali = document.getElementById("kembali");
+    const tombolPengaturan = document.getElementById("tombolPengaturan");
+    const tombolBermain = document.getElementById("play");
+
+    const sensSlider = document.getElementById("myRange");
 
     let prevTime = performance.now();
     const velocity = new THREE.Vector3();
@@ -39,13 +48,13 @@
         scene.background = new THREE.Color( 0xffffff );
         scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
 
-        const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.1 );
+        const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.5 );
         light.position.set( 0.5, 1, 0.75 );
         scene.add( light );
         // ------------------------- Menambah light untuk muzzle flash (ketika menembak)
-        flash = new THREE.PointLight(0xf5e153, 1, 100 );
+        flash = new THREE.PointLight(0xf5e153, 0, 100 );
         flash.position.set(0.0, 0.0, -2.0);
-        flash.visible = false;
+        flash.visible = true;
         camera.add(flash);
         // ------------------------- Menambah control first person
         controls = new PointerLockControls( camera, document.body );
@@ -54,38 +63,56 @@
         scene.add( controls.getObject() );
         // ------------------------- Me-load sprite crosshair
         const map = new THREE.TextureLoader().load( './assets/crosshair.png' );
-        const material = new THREE.SpriteMaterial( { map: map, transparent: true } );
+        const material = new THREE.SpriteMaterial( { map: map, transparent: true, depthTest: false } );
 
         sprite = new THREE.Sprite( material );
         sprite.scale.set(0.1, 0.1, 1);
         sprite.position.z = -2.0;
-        sprite.renderOrder = 9999;
-        sprite.depthWrite = false;
         scene.add( sprite );
 
+        flashTimer = 0;
 
         const blocker = document.getElementById( 'blocker' );
         const instructions = document.getElementById( 'instructions' );
+        const pengaturan = document.getElementById('pengaturan');
         // ------------------------- Event handling
         // ------------------------- Menu event handling
-        instructions.addEventListener( 'click', function () {
-            console.log("lock");
+        tombolBermain.addEventListener( 'click', function () {
             controls.lock();
-
         }, false );
 
-        controls.addEventListener( 'lock', function () {
+        tombolKembali.addEventListener('click', function (){
+            gameState = 1;
+            blocker.style.display = 'block';
+            pengaturan.style.display = 'none';
+            instructions.style.display = '';
 
+            controls.setSens(sensSlider.value);
+        }, false);
+
+        tombolPengaturan.addEventListener('click', function (){
+            console.log("clicking setting");
+            gameState = 2;
+            blocker.style.display = 'block';
+            pengaturan.style.display = '';
+            instructions.style.display = 'none';
+        }, false);
+
+        
+        
+
+        controls.addEventListener( 'lock', function () {
+            gameState = 0;
             instructions.style.display = 'none';
             blocker.style.display = 'none';
 
         } );
 
         controls.addEventListener( 'unlock', function () {
-
+            gameState = 1;
             blocker.style.display = 'block';
             instructions.style.display = '';
-
+            // Reset the game
         } );
 
         // ------------------------ movement event handling
@@ -117,9 +144,7 @@
                     if ( canJump === true ) velocity.y += 150;
                     canJump = false;
                     break;
-
             }
-
         };
         
         const onKeyUp = function ( event ) {
@@ -150,6 +175,9 @@
 
         };
 
+        
+
+
         document.addEventListener( 'keydown', onKeyDown, false );
         document.addEventListener( 'keyup', onKeyUp, false );
 
@@ -157,25 +185,22 @@
         document.addEventListener( 'mousedown', function (e) {
             if(controls.isLocked){
                 shooting = true;
-                flash.visible = true;
-                setTimeout(setInvisible, 100, flash);
+                flash.intensity = 1;
                 raycaster2.setFromCamera( new THREE.Vector2(), camera );
                 raycaster2.ray.origin.copy( controls.getObject().position );
                 const intersects = raycaster2.intersectObjects( scene.children );
 
                 for ( let i = 0; i < intersects.length; i ++ ) {
                     if(intersects[i].object.id != sprite.id && (objects.includes(intersects[i].object))){
-                        //intersects[ i ].object.material.color.set( 0xff0000 );
                         if(shooting){
                             shooting = false;
+                            //menghapus objek yang di tembak
                             scene.remove(intersects[i].object);
-                            score++;
-                            console.log(score);
+                            objects.splice(objects.indexOf(intersects[i].object), 1);
+                            score++;  
                         }
                     }
-                    //console.log(intersects[i]);
                 }
-
                 shooting = false;
             }
         }, false );
@@ -285,6 +310,13 @@
         const time = performance.now();
 
         if ( controls.isLocked === true ) {
+            if(flash.intensity > 0){
+                flashTimer++;
+            }
+            if(flashTimer > 6){
+                flashTimer = 0;
+                flash.intensity = 0;
+            }
 
             // menambahkan sprite crosshair
             var dir = controls.getDirection( direction );
