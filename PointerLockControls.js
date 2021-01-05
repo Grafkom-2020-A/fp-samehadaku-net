@@ -29,6 +29,8 @@ var PointerLockControls = function ( camera, domElement ) {
 
 	var sens = 0.002;
 
+	var frontSens;
+
 	var changeEvent = { type: 'change' };
 	var lockEvent = { type: 'lock' };
 	var unlockEvent = { type: 'unlock' };
@@ -160,8 +162,13 @@ var PointerLockControls = function ( camera, domElement ) {
 		var lowerBound = 0.0;
 		var upperBound = 0.013;
 		sens = (newSens * (upperBound - lowerBound) / 10) + lowerBound;
+		frontSens = newSens;
 		return sens;
 	};
+
+	this.getSens = function(){
+		return frontSens;
+	}
 
 	this.connect();
 

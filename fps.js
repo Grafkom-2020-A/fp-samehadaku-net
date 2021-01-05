@@ -28,6 +28,11 @@
 
     let gameState = 1;
     //0 bermain, 1 main menu, 2 pengaturan
+
+    const blocker = document.getElementById( 'blocker' );
+    const instructions = document.getElementById( 'instructions' );
+    const pengaturan = document.getElementById('pengaturan');
+    
     const tombolKembali = document.getElementById("kembali");
     const tombolPengaturan = document.getElementById("tombolPengaturan");
     const tombolBermain = document.getElementById("play");
@@ -85,10 +90,6 @@
 
         flashTimer = 0;
 
-        const blocker = document.getElementById( 'blocker' );
-        const instructions = document.getElementById( 'instructions' );
-        const pengaturan = document.getElementById('pengaturan');
-
         pengaturan.style.display = 'none';
 
         // ------------------------- Event handling
@@ -98,33 +99,22 @@
         }, false );
 
         tombolKembali.addEventListener('click', function (){
-            gameState = 1;
-            blocker.style.display = 'block';
-            pengaturan.style.display = 'none';
-            instructions.style.display = '';
-
+            setGameState(1);
             controls.setSens(sensSlider.value);
         }, false);
 
         tombolPengaturan.addEventListener('click', function (){
-            console.log("clicking setting");
-            gameState = 2;
-            blocker.style.display = 'block';
-            pengaturan.style.display = '';
-            instructions.style.display = 'none';
+            setGameState(2);
+            sensSlider.value = controls.getSens();
+            document.getElementById("sens").innerHTML = sensSlider.value;
         }, false);
 
         controls.addEventListener( 'lock', function () {
-            gameState = 0;
-            instructions.style.display = 'none';
-            blocker.style.display = 'none';
-
+            setGameState(0);
         } );
 
         controls.addEventListener( 'unlock', function () {
-            gameState = 1;
-            blocker.style.display = 'block';
-            instructions.style.display = '';
+            setGameState(1);
             // Reset the game
         } );
 
@@ -474,6 +464,25 @@
                 hitSounds[i].play();
                 break;
             }
+        }
+    }
+
+    function setGameState( state ){
+        if(state == 0){
+            gameState = 0;
+            instructions.style.display = 'none';
+            blocker.style.display = 'none';
+            pengaturan.style.display = 'none';
+        }else if( state == 1 ){
+            gameState = 1;
+            blocker.style.display = 'block';
+            pengaturan.style.display = 'none';
+            instructions.style.display = '';
+        }else if(state == 2){
+            gameState = 2;
+            blocker.style.display = 'block';
+            pengaturan.style.display = '';
+            instructions.style.display = 'none';
         }
     }
  
