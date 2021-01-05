@@ -6,7 +6,13 @@
 
     var sprite;
 
-    const objects = [];
+    const targets = [];
+    let targetSize = 3;
+    let targetCount = 6;
+    let gridSpacing = 10;
+
+    let shootCount = 0, targetHit = 0;
+    var acc;
 
     let raycaster, raycaster2;
 
@@ -48,8 +54,9 @@
     let prevTime = performance.now();
     const velocity = new THREE.Vector3();
     const direction = new THREE.Vector3();
-    const vertex = new THREE.Vector3();
     const color = new THREE.Color();
+
+    const targetPos = new Array(16).fill(false); //posisi target (false kosong, true berisi)
 
     init();
     animate();
@@ -58,6 +65,7 @@
         // ------------------------- Initiating objects
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
         camera.position.y = 10;
+        camera.rotateY(Math.PI);
 
         scene = new THREE.Scene();
         scene.background = new THREE.Color( 0xffffff );
@@ -96,6 +104,7 @@
         // ------------------------- Menu event handling
         tombolBermain.addEventListener( 'click', function () {
             controls.lock();
+            resetGame();
         }, false );
 
         tombolKembali.addEventListener('click', function (){
@@ -210,6 +219,7 @@
         // ------------------------- shooting event handling
         document.addEventListener( 'mousedown', function (e) {
             if(controls.isLocked && e.button == 0){
+                shootCount++;
                 shooting = true;
                 flash.intensity = 1;
                 raycaster2.setFromCamera( new THREE.Vector2(), camera );
@@ -217,14 +227,18 @@
                 const intersects = raycaster2.intersectObjects( scene.children );
 
                 for ( let i = 0; i < intersects.length; i ++ ) {
-                    if(intersects[i].object.id != sprite.id && (objects.includes(intersects[i].object))){
+                    if(intersects[i].object.id != sprite.id && (targets.includes(intersects[i].object))){ //object yang ditembak ada di array "target"
                         if(shooting){
                             shooting = false;
                             playHitSound();
-                            //menghapus objek yang di tembak
-                            scene.remove(intersects[i].object);
-                            objects.splice(objects.indexOf(intersects[i].object), 1);
-                            score++;  
+                            //menggeser objek yang di tembak
+                            // scene.remove(intersects[i].object);
+                            // targets.splice(targets.indexOf(intersects[i].object), 1);
+                            console.log(getGrid(intersects[i].object));
+                            setTargetPos(intersects[i].object);
+
+                            score++;
+                            targetHit++;  
                         }
                     }
                 }
@@ -237,11 +251,6 @@
         scoreCanvas = document.createElement('canvas');
         scoreCanvas.width = scoreCanvas.height = 1024;
         scoreCanvasContext = scoreCanvas.getContext('2d');
-        scoreCanvasContext.font = "Bold 40px Arial";
-        scoreCanvasContext.textAlign = "center";
-        scoreCanvasContext.textBaseline = "middle";
-        scoreCanvasContext.fillStyle = "rgba(20,20,20,0.95)";
-        scoreCanvasContext.fillText('Skor : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
 
         scoreHUD = new THREE.Texture(scoreCanvas);
         scoreHUD.needsUpdate = true;
@@ -271,35 +280,21 @@
         const floor = new THREE.Mesh( floorGeometry, floorMaterial );
         scene.add( floor );
 
-        // objects
+        // objects target
+        const sphereGeometry = new THREE.SphereBufferGeometry( targetSize, 16, 16 );
 
-        const boxGeometry = new THREE.BoxBufferGeometry( 5, 5, 5 ).toNonIndexed();
+        targetCount = Math.min(targetCount, 16);
+        for ( let i = 0; i < targetCount; i ++ ) {
 
-        var position;
-        position = boxGeometry.attributes.position;
-        const colorsBox = [];
+            const sphereMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: false, transparent: true, color: 0x44edf5} );
 
-        for ( let i = 0, l = position.count; i < l; i ++ ) {
+            const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 
-            color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-            colorsBox.push( color.r, color.g, color.b );
+            sphere.position.z = 100;
+            setTargetPos( sphere );
 
-        }
-
-        boxGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsBox, 3 ) );
-
-        for ( let i = 0; i < 500; i ++ ) {
-
-            const boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, vertexColors: true, transparent: true} );
-            boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-
-            const box = new THREE.Mesh( boxGeometry, boxMaterial );
-            box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
-            box.position.y = Math.floor( Math.random() * 20 ) * 20 + 10;
-            box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
-
-            scene.add( box );
-            objects.push( box );
+            scene.add( sphere );
+            targets.push( sphere );
 
         }
 
@@ -353,7 +348,7 @@
             raycaster.ray.origin.copy( controls.getObject().position );
             raycaster.ray.origin.y -= 10;
 
-            const intersections = raycaster.intersectObjects( objects );
+            const intersections = raycaster.intersectObjects( targets );
 
             const onObject = intersections.length > 0;
 
@@ -416,6 +411,10 @@
         scoreCanvasContext.textAlign = "center";
         scoreCanvasContext.textBaseline = "middle";
         scoreCanvasContext.fillText('Skor : ' + score, scoreCanvas.width/2, scoreCanvas.height/2);
+        if(shootCount == 0) acc = 1;
+        else acc = targetHit/shootCount;
+
+        scoreCanvasContext.fillText('Akurasi : ' + (acc * 100).toFixed(2) + "%", scoreCanvas.width/2, scoreCanvas.height/2 + 40);
     }
 
     function playGunSound(){
@@ -453,5 +452,41 @@
             pengaturan.style.display = '';
             instructions.style.display = 'none';
         }
+    }
+
+    function setTargetPos( targetObj ){
+        var pos = getGrid(targetObj);
+        var grid = Math.floor(Math.random() * 16);
+        while(targetPos[grid]){
+            grid++;
+            grid = grid % 16;
+        }
+        var x, y;
+        x = ( grid % 4 ) * 10 - (gridSpacing * 3/2);
+        y = ( Math.floor( grid / 4 )) * 10 + 10;
+        targetObj.position.x = x;
+        targetObj.position.y = y;
+        targetPos[grid] = true;
+        targetPos[pos] = false;
+    }
+
+    function getGrid (targetObj) {
+        var gridX, gridY;
+        gridX = (targetObj.position.x + (gridSpacing * 3/2)) / 10;
+        gridY = (targetObj.position.y - 10) / 10;
+        return gridY * 4 + gridX;
+    }
+
+    function resetGame(){
+        for(var i = 0; i < targets.length; i++){
+            setTargetPos(targets[i]);
+        }
+        targetHit = 0;
+        shootCount = 0;
+        score = 0;
+        camera.position.y = 10;
+        camera.position.x = 0;
+        camera.position.z = 0;
+        camera.lookAt(0, 10, 100);
     }
  
