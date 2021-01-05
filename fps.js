@@ -36,6 +36,8 @@
 
     const audioListener = new THREE.AudioListener();
     const gunSounds = [];
+    const hitSounds = [];
+    const hitSoundLoader = new THREE.AudioLoader();
     const audioLoader = new THREE.AudioLoader();
 
     let prevTime = performance.now();
@@ -193,9 +195,19 @@
         for(var i = 0; i < 3; i++){
             var gunSound = new THREE.Audio( audioListener );
             gunSounds.push(gunSound);
+            var hitSound = new THREE.Audio( audioListener );
+            hitSounds.push(hitSound);
         }
-        
+
         camera.add( audioListener );
+        hitSoundLoader.load( 'hit.ogg', function( buffer ) {
+            for(var i = 0; i < gunSounds.length; i++){
+                hitSounds[i].setBuffer( buffer );
+                hitSounds[i].setVolume(0.1);
+                hitSounds[i].offset = 0.1;
+            }     
+        });
+        
         audioLoader.load( 'gunsound.wav', function( buffer ) {
             for(var i = 0; i < gunSounds.length; i++){
                 gunSounds[i].setBuffer( buffer );
@@ -218,7 +230,7 @@
                     if(intersects[i].object.id != sprite.id && (objects.includes(intersects[i].object))){
                         if(shooting){
                             shooting = false;
-                            
+                            playHitSound();
                             //menghapus objek yang di tembak
                             scene.remove(intersects[i].object);
                             objects.splice(objects.indexOf(intersects[i].object), 1);
@@ -450,8 +462,16 @@
     function playGunSound(){
         for(var i = 0; i < gunSounds.length; i++){
             if(!gunSounds[i].isPlaying){
-                console.log("playing" + i);
                 gunSounds[i].play();
+                break;
+            }
+        }
+    }
+
+    function playHitSound(){
+        for(var i = 0; i < hitSounds.length; i++){
+            if(!hitSounds[i].isPlaying){
+                hitSounds[i].play();
                 break;
             }
         }
