@@ -51,16 +51,19 @@
         const light = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.5 );
         light.position.set( 0.5, 1, 0.75 );
         scene.add( light );
+
         // ------------------------- Menambah light untuk muzzle flash (ketika menembak)
         flash = new THREE.PointLight(0xf5e153, 0, 100 );
         flash.position.set(0.0, 0.0, -2.0);
         flash.visible = true;
         camera.add(flash);
+        
         // ------------------------- Menambah control first person
         controls = new PointerLockControls( camera, document.body );
         console.log(controls.setSens(0.5));
 
         scene.add( controls.getObject() );
+
         // ------------------------- Me-load sprite crosshair
         const map = new THREE.TextureLoader().load( './assets/crosshair.png' );
         const material = new THREE.SpriteMaterial( { map: map, transparent: true, depthTest: false } );
@@ -75,6 +78,7 @@
         const blocker = document.getElementById( 'blocker' );
         const instructions = document.getElementById( 'instructions' );
         const pengaturan = document.getElementById('pengaturan');
+
         // ------------------------- Event handling
         // ------------------------- Menu event handling
         tombolBermain.addEventListener( 'click', function () {
@@ -97,9 +101,6 @@
             pengaturan.style.display = '';
             instructions.style.display = 'none';
         }, false);
-
-        
-        
 
         controls.addEventListener( 'lock', function () {
             gameState = 0;
@@ -174,9 +175,6 @@
             }
 
         };
-
-        
-
 
         document.addEventListener( 'keydown', onKeyDown, false );
         document.addEventListener( 'keyup', onKeyUp, false );
