@@ -222,7 +222,7 @@
         }
 
         camera.add( audioListener );
-        hitSoundLoader.load( 'hit.ogg', function( buffer ) {
+        hitSoundLoader.load( '../assets/sounds/hit.ogg', function( buffer ) {
             for(var i = 0; i < gunSounds.length; i++){
                 hitSounds[i].setBuffer( buffer );
                 hitSounds[i].setVolume(0.1);
@@ -230,7 +230,7 @@
             }     
         });
         
-        audioLoader.load( 'gunsound.wav', function( buffer ) {
+        audioLoader.load( '../assets/sounds/gunsound.wav', function( buffer ) {
             for(var i = 0; i < gunSounds.length; i++){
                 gunSounds[i].setBuffer( buffer );
                 gunSounds[i].setVolume(0.2);
