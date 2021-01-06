@@ -33,15 +33,20 @@
     let scoreHUD, scoreMat, scoreMesh;
 
     let gameState = 1;
-    //0 bermain, 1 main menu, 2 pengaturan
+    //0 bermain, 1 main menu, 2 pengaturan, 3 endgame screen
 
     const blocker = document.getElementById( 'blocker' );
     const instructions = document.getElementById( 'instructions' );
     const pengaturan = document.getElementById('pengaturan');
+    const endGameScreen = document.getElementById('endgame');
     
     const tombolKembali = document.getElementById("kembali");
     const tombolPengaturan = document.getElementById("tombolPengaturan");
     const tombolBermain = document.getElementById("play");
+    const tombolRetry = document.getElementById("cobalagi");
+
+    const scoreText = document.getElementById("skor");
+    const accText = document.getElementById("akurasi");
 
     const sensSlider = document.getElementById("myRange");
 
@@ -104,7 +109,7 @@
         sprite = new THREE.Sprite( material );
         sprite.scale.set(0.1, 0.1, 1);
         sprite.position.z = -2.0;
-        scene.add( sprite );
+        camera.add( sprite );
 
         flashTimer = 0;
 
@@ -123,6 +128,11 @@
             controls.setSens(sensSlider.value);
         }, false);
 
+        tombolRetry.addEventListener('click', function (){
+            resetGame();
+            setGameState(1);
+        }, false);
+
         tombolPengaturan.addEventListener('click', function (){
             setGameState(2);
             sensSlider.value = controls.getSens();
@@ -134,7 +144,7 @@
         } );
 
         controls.addEventListener( 'unlock', function () {
-            setGameState(1);
+            if(gameState == 0) setGameState(1);
             // Reset the game
         } );
 
@@ -249,6 +259,9 @@
                 }
                 playGunSound();
                 shooting = false;
+
+                updateCanvas();
+                scoreHUD.needsUpdate = true;
             }
         }, false );
 
@@ -311,6 +324,9 @@
         //
         window.addEventListener( 'resize', onWindowResize, false );
 
+        updateCanvas();
+        scoreHUD.needsUpdate = true;
+
     }
 
     function onWindowResize() {
@@ -330,8 +346,9 @@
 
         if ( controls.isLocked === true ) {
 
-            updateCanvas();
-            scoreHUD.needsUpdate = true;
+            if(score == 5){
+                setGameState(3);
+            }
 
             if(flash.intensity > 0){
                 flashTimer++;
@@ -357,8 +374,6 @@
 
             velocity.x -= velocity.x * 10.0 * delta;
             velocity.z -= velocity.z * 10.0 * delta;
-
-            
 
             velocity.y -= 7 * 60.0 * delta; // 100.0 = mass
 
@@ -402,11 +417,6 @@
             if(camera.position.z < -boundingBox){
                 camera.position.z = -boundingBox;
             }
-
-            sprite.position.x = camera.position.x + dirV.x;
-            sprite.position.y = camera.position.y + dirV.y;
-            sprite.position.z = camera.position.z + dirV.z;
-            // sprite.renderOrder = 9999;
         }
 
         prevTime = time;
@@ -456,16 +466,35 @@
             instructions.style.display = 'none';
             blocker.style.display = 'none';
             pengaturan.style.display = 'none';
+            endGameScreen.style.display = 'none';
         }else if( state == 1 ){
             gameState = 1;
+            resetGame();
+            controls.unlock();
             blocker.style.display = '';
             pengaturan.style.display = 'none';
             instructions.style.display = '';
+            endGameScreen.style.display = 'none';
         }else if(state == 2){
             gameState = 2;
             blocker.style.display = '';
             pengaturan.style.display = 'block';
             instructions.style.display = 'none';
+            endGameScreen.style.display = 'none';
+        }else if(state == 3){
+            gameState = 3;
+            controls.unlock();
+
+            var stringAcc = "";
+            stringAcc += (acc * 100).toFixed(2) + "%";
+
+            scoreText.innerHTML = score;
+            accText.innerHTML = stringAcc;
+
+            blocker.style.display = '';
+            pengaturan.style.display = 'none';
+            instructions.style.display = 'none';
+            endGameScreen.style.display = 'block';
         }
     }
 
@@ -502,6 +531,9 @@
         camera.position.y = 10;
         camera.position.x = 0;
         camera.position.z = 0;
+
         camera.lookAt(0, 10, 100);
+        updateCanvas();
+        scoreHUD.needsUpdate = true;
     }
  

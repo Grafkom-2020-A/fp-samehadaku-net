@@ -69,6 +69,35 @@ html, body {
 
 }
 
+#endgame {
+    width: 100%;
+    height: auto;
+
+    margin-top: auto;
+    margin-bottom: auto;
+
+    display: none; 
+
+    -webkit-box-orient: horizontal;
+    -moz-box-orient: horizontal;
+    box-orient: horizontal;
+
+    -webkit-box-pack: center;
+    -moz-box-pack: center;
+    box-pack: center;
+
+    -webkit-box-align: center;
+    -moz-box-align: center;
+    box-align: center;
+
+    color: #ffffff;
+    text-align: center;
+    font-family: Arial;
+    font-size: 14px;
+    line-height: 24px;
+
+}
+
 .slidecontainer {
     width: 100%;
     display: inline;
@@ -100,6 +129,17 @@ html, body {
 #play:hover {
     color: coral;
 }
+
+#cobalagi {
+    font-size:36px;
+    cursor:pointer;
+    user-select: none;
+}
+
+#cobalagi:hover {
+    color: coral;
+}
+
 
 .slider {
     width: 20%; /* Full-width */
