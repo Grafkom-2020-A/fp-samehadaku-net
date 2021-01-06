@@ -29,7 +29,7 @@ var PointerLockControls = function ( camera, domElement ) {
 
 	var sens = 0.002;
 
-	var frontSens;
+	var frontSens = 0.6;
 
 	var changeEvent = { type: 'change' };
 	var lockEvent = { type: 'lock' };

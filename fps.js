@@ -86,6 +86,9 @@
 
         scene.add( controls.getObject() );
 
+        const axesHelper = new THREE.AxesHelper( 10000 );
+        scene.add( axesHelper );
+
         // ------------------------- Me-load sprite crosshair
         const map = new THREE.TextureLoader().load( './assets/crosshair.png' );
         const material = new THREE.SpriteMaterial( { map: map, transparent: true, depthTest: false } );
@@ -102,6 +105,7 @@
         // ------------------------- Event handling
         // ------------------------- Menu event handling
         tombolBermain.addEventListener( 'click', function () {
+            controls.setSens(controls.getSens());
             controls.lock();
             resetGame();
         }, false );
@@ -278,9 +282,7 @@
 
         targetCount = Math.min(targetCount, 16);
         for ( let i = 0; i < targetCount; i ++ ) {
-
             const sphereMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: false, transparent: true, color: 0x44edf5} );
-
             const sphere = new THREE.Mesh( sphereGeometry, sphereMaterial );
 
             sphere.position.z = 100;
@@ -288,7 +290,6 @@
 
             scene.add( sphere );
             targets.push( sphere );
-
         }
 
         //
@@ -300,7 +301,6 @@
         document.body.appendChild( renderer.domElement );
 
         //
-
         window.addEventListener( 'resize', onWindowResize, false );
 
     }
@@ -350,6 +350,8 @@
             velocity.x -= velocity.x * 10.0 * delta;
             velocity.z -= velocity.z * 10.0 * delta;
 
+            
+
             velocity.y -= 7 * 60.0 * delta; // 100.0 = mass
 
             direction.z = Number( moveForward ) - Number( moveBackward );
@@ -378,6 +380,19 @@
 
                 canJump = true;
 
+            }
+            var boundingBox = 20;
+            if(camera.position.x > boundingBox){
+                camera.position.x = boundingBox;
+            }
+            if(camera.position.x < -boundingBox){
+                camera.position.x = -boundingBox;
+            }
+            if(camera.position.z > boundingBox){
+                camera.position.z = boundingBox;
+            }
+            if(camera.position.z < -boundingBox){
+                camera.position.z = -boundingBox;
             }
 
             sprite.position.x = camera.position.x + dirV.x;
