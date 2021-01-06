@@ -14,6 +14,8 @@
     let shootCount = 0, targetHit = 0;
     var acc;
 
+    var secondTimer = 0, secondsPassed = 0, timeLimit = 15;
+
     let raycaster, raycaster2;
 
     let moveForward = false;
@@ -33,15 +35,20 @@
     let scoreHUD, scoreMat, scoreMesh;
 
     let gameState = 1;
-    //0 bermain, 1 main menu, 2 pengaturan
+    //0 bermain, 1 main menu, 2 pengaturan, 3 endgame screen
 
     const blocker = document.getElementById( 'blocker' );
     const instructions = document.getElementById( 'instructions' );
     const pengaturan = document.getElementById('pengaturan');
+    const endGameScreen = document.getElementById('endgame');
     
     const tombolKembali = document.getElementById("kembali");
     const tombolPengaturan = document.getElementById("tombolPengaturan");
     const tombolBermain = document.getElementById("play");
+    const tombolRetry = document.getElementById("cobalagi");
+
+    const scoreText = document.getElementById("skor");
+    const accText = document.getElementById("akurasi");
 
     const sensSlider = document.getElementById("myRange");
 
@@ -104,7 +111,7 @@
         sprite = new THREE.Sprite( material );
         sprite.scale.set(0.1, 0.1, 1);
         sprite.position.z = -2.0;
-        scene.add( sprite );
+        camera.add( sprite );
 
         flashTimer = 0;
 
@@ -123,6 +130,11 @@
             controls.setSens(sensSlider.value);
         }, false);
 
+        tombolRetry.addEventListener('click', function (){
+            resetGame();
+            setGameState(1);
+        }, false);
+
         tombolPengaturan.addEventListener('click', function (){
             setGameState(2);
             sensSlider.value = controls.getSens();
@@ -134,7 +146,7 @@
         } );
 
         controls.addEventListener( 'unlock', function () {
-            setGameState(1);
+            if(gameState == 0) setGameState(1);
             // Reset the game
         } );
 
@@ -210,7 +222,7 @@
         }
 
         camera.add( audioListener );
-        hitSoundLoader.load( 'hit.ogg', function( buffer ) {
+        hitSoundLoader.load( '../assets/sounds/hit.ogg', function( buffer ) {
             for(var i = 0; i < gunSounds.length; i++){
                 hitSounds[i].setBuffer( buffer );
                 hitSounds[i].setVolume(0.1);
@@ -218,7 +230,7 @@
             }     
         });
         
-        audioLoader.load( 'gunsound.wav', function( buffer ) {
+        audioLoader.load( '../assets/sounds/gunsound.wav', function( buffer ) {
             for(var i = 0; i < gunSounds.length; i++){
                 gunSounds[i].setBuffer( buffer );
                 gunSounds[i].setVolume(0.2);
@@ -249,6 +261,7 @@
                 }
                 playGunSound();
                 shooting = false;
+
             }
         }, false );
 
@@ -311,6 +324,9 @@
         //
         window.addEventListener( 'resize', onWindowResize, false );
 
+        updateCanvas();
+        scoreHUD.needsUpdate = true;
+
     }
 
     function onWindowResize() {
@@ -327,11 +343,27 @@
         requestAnimationFrame( animate );
 
         const time = performance.now();
+        updateCanvas();
+        scoreHUD.needsUpdate = true;
+
+        if(!gameState == 0){
+            velocity.x =0;
+            velocity.y =0;
+            velocity.z = 0;
+        }
 
         if ( controls.isLocked === true ) {
 
-            updateCanvas();
-            scoreHUD.needsUpdate = true;
+            const delta = ( time - prevTime ) / 1000;
+            secondTimer += (time - prevTime);
+            if(secondTimer >= 1000) {
+                secondTimer -= 1000;
+                secondsPassed += 1;
+            }
+
+            if(timeLimit - secondsPassed <= 0){
+                setGameState(3);
+            }
 
             if(flash.intensity > 0){
                 flashTimer++;
@@ -353,12 +385,8 @@
 
             const onObject = intersections.length > 0;
 
-            const delta = ( time - prevTime ) / 1000;
-
             velocity.x -= velocity.x * 10.0 * delta;
             velocity.z -= velocity.z * 10.0 * delta;
-
-            
 
             velocity.y -= 7 * 60.0 * delta; // 100.0 = mass
 
@@ -402,11 +430,6 @@
             if(camera.position.z < -boundingBox){
                 camera.position.z = -boundingBox;
             }
-
-            sprite.position.x = camera.position.x + dirV.x;
-            sprite.position.y = camera.position.y + dirV.y;
-            sprite.position.z = camera.position.z + dirV.z;
-            // sprite.renderOrder = 9999;
         }
 
         prevTime = time;
@@ -430,6 +453,8 @@
         else acc = targetHit/shootCount;
 
         scoreCanvasContext.fillText('Akurasi : ' + (acc * 100).toFixed(2) + "%", scoreCanvas.width/2, scoreCanvas.height/2 + 40);
+        scoreCanvasContext.font = "Bold 80px Arial";
+        scoreCanvasContext.fillText((timeLimit - secondsPassed).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}), scoreCanvas.width/2, scoreCanvas.height/2 + 120);
     }
 
     function playGunSound(){
@@ -456,16 +481,35 @@
             instructions.style.display = 'none';
             blocker.style.display = 'none';
             pengaturan.style.display = 'none';
+            endGameScreen.style.display = 'none';
         }else if( state == 1 ){
             gameState = 1;
+            resetGame();
+            controls.unlock();
             blocker.style.display = '';
             pengaturan.style.display = 'none';
             instructions.style.display = '';
+            endGameScreen.style.display = 'none';
         }else if(state == 2){
             gameState = 2;
             blocker.style.display = '';
             pengaturan.style.display = 'block';
             instructions.style.display = 'none';
+            endGameScreen.style.display = 'none';
+        }else if(state == 3){
+            gameState = 3;
+            controls.unlock();
+
+            var stringAcc = "";
+            stringAcc += (acc * 100).toFixed(2) + "%";
+
+            scoreText.innerHTML = score;
+            accText.innerHTML = stringAcc;
+
+            blocker.style.display = '';
+            pengaturan.style.display = 'none';
+            instructions.style.display = 'none';
+            endGameScreen.style.display = 'block';
         }
     }
 
@@ -502,6 +546,12 @@
         camera.position.y = 10;
         camera.position.x = 0;
         camera.position.z = 0;
+
+        secondTimer = 0;
+        secondsPassed = 0;
+
         camera.lookAt(0, 10, 100);
+        updateCanvas();
+        scoreHUD.needsUpdate = true;
     }
  
