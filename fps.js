@@ -14,6 +14,8 @@
     let shootCount = 0, targetHit = 0;
     var acc;
 
+    var secondTimer = 0, secondsPassed = 0, timeLimit = 15;
+
     let raycaster, raycaster2;
 
     let moveForward = false;
@@ -260,8 +262,6 @@
                 playGunSound();
                 shooting = false;
 
-                updateCanvas();
-                scoreHUD.needsUpdate = true;
             }
         }, false );
 
@@ -344,9 +344,19 @@
 
         const time = performance.now();
 
+        updateCanvas();
+        scoreHUD.needsUpdate = true;
+
         if ( controls.isLocked === true ) {
 
-            if(score == 5){
+            const delta = ( time - prevTime ) / 1000;
+            secondTimer += (time - prevTime);
+            if(secondTimer >= 1000) {
+                secondTimer -= 1000;
+                secondsPassed += 1;
+            }
+
+            if(timeLimit - secondsPassed <= 0){
                 setGameState(3);
             }
 
@@ -369,8 +379,6 @@
             const intersections = raycaster.intersectObjects( targets );
 
             const onObject = intersections.length > 0;
-
-            const delta = ( time - prevTime ) / 1000;
 
             velocity.x -= velocity.x * 10.0 * delta;
             velocity.z -= velocity.z * 10.0 * delta;
@@ -440,6 +448,8 @@
         else acc = targetHit/shootCount;
 
         scoreCanvasContext.fillText('Akurasi : ' + (acc * 100).toFixed(2) + "%", scoreCanvas.width/2, scoreCanvas.height/2 + 40);
+        scoreCanvasContext.font = "Bold 80px Arial";
+        scoreCanvasContext.fillText((timeLimit - secondsPassed).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false}), scoreCanvas.width/2, scoreCanvas.height/2 + 120);
     }
 
     function playGunSound(){
@@ -531,6 +541,9 @@
         camera.position.y = 10;
         camera.position.x = 0;
         camera.position.z = 0;
+
+        secondTimer = 0;
+        secondsPassed = 0;
 
         camera.lookAt(0, 10, 100);
         updateCanvas();
