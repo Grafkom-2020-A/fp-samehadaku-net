@@ -343,9 +343,14 @@
         requestAnimationFrame( animate );
 
         const time = performance.now();
-
         updateCanvas();
         scoreHUD.needsUpdate = true;
+
+        if(!gameState == 0){
+            velocity.x =0;
+            velocity.y =0;
+            velocity.z = 0;
+        }
 
         if ( controls.isLocked === true ) {
 
