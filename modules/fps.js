@@ -96,17 +96,6 @@
 
         scene.add( controls.getObject() );
 
-        //helper untuk debugging
-        const axesHelper = new THREE.AxesHelper( 10000 );
-        scene.add( axesHelper );
-
-        const playAreaGeom = new THREE.BoxBufferGeometry(40, 40, 40);
-        const playAreaMesh = new THREE.Mesh( playAreaGeom, new THREE.MeshBasicMaterial( 0xff0000 ) );
-        playAreaMesh.position.y = 20;
-        const playArea = new THREE.BoxHelper( playAreaMesh, 0xffff00 );
-        
-        scene.add( playArea );
-
         // ------------------------- Me-load sprite crosshair
         const map = new THREE.TextureLoader().load( './assets/crosshair.png' );
         const material = new THREE.SpriteMaterial( { map: map, transparent: true, depthTest: false } );
