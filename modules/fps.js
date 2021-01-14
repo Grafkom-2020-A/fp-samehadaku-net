@@ -325,6 +325,15 @@
         directionalLight.shadow.mapSize.height = 1024;
         scene.add( directionalLight );
 
+        const bgloader = new THREE.TextureLoader();
+        const bgtexture = bgloader.load(
+          './assets/skybox.jpg',
+          () => {
+            const rt = new THREE.WebGLCubeRenderTarget(bgtexture.image.height);
+            rt.fromEquirectangularTexture(renderer, bgtexture);
+            scene.background = rt;
+        });
+
         // objects target
         const sphereGeometry = new THREE.SphereBufferGeometry( targetSize, 16, 16 );
 
